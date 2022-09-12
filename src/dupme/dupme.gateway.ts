@@ -6,24 +6,34 @@ import {
   OnGatewayDisconnect,
   WebSocketServer,
   ConnectedSocket,
+  OnGatewayInit,
 } from '@nestjs/websockets';
 import { DupmeService } from './dupme.service';
-import { CreateDupmeDto } from './dto/create-dupme.dto';
-import { UpdateDupmeDto } from './dto/update-dupme.dto';
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 
-@WebSocketGateway(81, { cors: true })
-export class DupmeGateway implements OnGatewayConnection, OnGatewayDisconnect {
+@WebSocketGateway(81, {
+  cors: {
+    origin: 'http://localhost:3000',
+  },
+})
+export class DupmeGateway
+  implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
+{
   @WebSocketServer()
   server: Server;
 
   private logger = new Logger();
   constructor(private readonly dupmeService: DupmeService) {}
 
+  afterInit() {
+    this.dupmeService.clearRoom();
+    this.dupmeService.clearPlayer();
+  }
+
   handleConnection(client: Socket) {
+    console.log('player connected');
     this.dupmeService.playerConnect(client.id);
-    this.logger.log('player connected');
   }
 
   handleDisconnect(client: Socket) {
@@ -33,25 +43,44 @@ export class DupmeGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('playerOnline')
   handlePlayerOnline() {
-    this.server.emit('currentPlayer', this.dupmeService.activePlayer.length);
+    this.server.emit('currentPlayer', this.dupmeService.activePlayer);
   }
 
-  @SubscribeMessage('roomOnline')
+  @SubscribeMessage('getRoom')
   handleRoomOnline() {
-    this.server.emit('currentRoom', this.dupmeService.currentRoom.length);
+    this.server.emit('currentRoom', this.dupmeService.currentRoom);
+  }
+
+  @SubscribeMessage('createRoom')
+  handleCreateRoom(@MessageBody() msg, @ConnectedSocket() client: Socket) {
+    const roomOption = JSON.parse(msg);
+    this.dupmeService.createRoom(client.id, roomOption.amount, roomOption.name);
+    this.server.emit('currentRoom', this.dupmeService.currentRoom);
   }
 
   @SubscribeMessage('joinRoom')
   handleJoinRoom(
-    @MessageBody('room') room: string,
+    @MessageBody() roomName: string,
     @ConnectedSocket() client: Socket,
   ) {
-    client.join(room);
-    this.server.emit('playerJoinedRoom', this.dupmeService.currentRoom);
+    this.dupmeService.joinRoom(client.id, roomName);
+    this.server.emit('currentRoom', this.dupmeService.currentRoom);
+    // this.server.emit('playerJoinedRoom', this.dupmeService.currentRoom);
   }
 
   @SubscribeMessage('message')
-  handleMessage(@MessageBody() message: string[]) {
-    this.server.emit('message', message[1]);
+  handleMessage(@MessageBody() message, @ConnectedSocket() client: Socket) {
+    this.logger.log('get message');
+    client.in('helo').allSockets();
+  }
+
+  @SubscribeMessage('keyPressed')
+  handleKeyPressed(@MessageBody() key: string) {
+    this.server.emit('opponentKeyPressed', key);
+  }
+
+  @SubscribeMessage('playerReady')
+  handlePlayerReady(@ConnectedSocket() client: Socket) {
+    this.logger.log('player ready');
   }
 }

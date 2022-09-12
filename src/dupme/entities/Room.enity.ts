@@ -1,6 +1,8 @@
-import { user } from './user.enitiy';
+import { User } from './user.enitiy';
 
 export class Room {
-  users: user[];
+  name: string;
+  players: User[];
+  bet: string;
   isFull: boolean;
 }

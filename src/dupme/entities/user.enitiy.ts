@@ -1,6 +1,5 @@
-import { Socket } from 'socket.io';
-export class user {
+export class User {
   id: string;
-  name: string;
-  socketInstance: Socket;
+  isReady: boolean;
+  currentRoom: string | null;
 }
