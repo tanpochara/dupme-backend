@@ -27,9 +27,27 @@ export class DupmeService {
       const roomDC = this.currentRoom[room];
       const temp = roomDC.players.filter((player) => player.id != playerDC.id);
       roomDC.players = temp;
+      roomDC.isFull = false;
     }
 
     delete this.activePlayer[socketId];
+  }
+
+  playerReady(socketId: string, roomName: string): void {
+    const player = this.activePlayer[socketId];
+    player.isReady = true;
+  }
+
+  playerLeaveRoom(socketId: string, roomName: string): void {
+    const player = this.activePlayer[socketId];
+    player.isReady = false;
+    player.currentRoom = null;
+
+    const room = this.currentRoom[roomName];
+    room.players = room.players.filter((playerr) => playerr.id != player.id);
+    if (room.players.length == 0) {
+      delete this.currentRoom[roomName];
+    }
   }
 
   clearPlayer(): void {
@@ -47,6 +65,7 @@ export class DupmeService {
       players: player,
       isFull: false,
     };
+    this.activePlayer[socketId].currentRoom = roomName;
     this.currentRoom[roomName] = temp;
   }
 
@@ -57,6 +76,10 @@ export class DupmeService {
     if (!room) return;
     const temp = room.players.concat(player);
     room.players = temp;
+    if (room.players.length >= 2) {
+      room.isFull = true;
+    }
+    player.currentRoom = roomName;
   }
 
   clearRoom(): void {

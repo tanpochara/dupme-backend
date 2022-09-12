@@ -54,6 +54,7 @@ export class DupmeGateway
   @SubscribeMessage('createRoom')
   handleCreateRoom(@MessageBody() msg, @ConnectedSocket() client: Socket) {
     const roomOption = JSON.parse(msg);
+    client.join(roomOption.name);
     this.dupmeService.createRoom(client.id, roomOption.amount, roomOption.name);
     this.server.emit('currentRoom', this.dupmeService.currentRoom);
   }
@@ -63,6 +64,7 @@ export class DupmeGateway
     @MessageBody() roomName: string,
     @ConnectedSocket() client: Socket,
   ) {
+    client.join(roomName);
     this.dupmeService.joinRoom(client.id, roomName);
     this.server.emit('currentRoom', this.dupmeService.currentRoom);
     // this.server.emit('playerJoinedRoom', this.dupmeService.currentRoom);
@@ -71,7 +73,7 @@ export class DupmeGateway
   @SubscribeMessage('message')
   handleMessage(@MessageBody() message, @ConnectedSocket() client: Socket) {
     this.logger.log('get message');
-    client.in('helo').allSockets();
+    client.in('helo').emit('roomMessage', 'kuyy');
   }
 
   @SubscribeMessage('keyPressed')
@@ -80,7 +82,20 @@ export class DupmeGateway
   }
 
   @SubscribeMessage('playerReady')
-  handlePlayerReady(@ConnectedSocket() client: Socket) {
-    this.logger.log('player ready');
+  handlePlayerReady(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() roomName: string,
+  ) {
+    this.dupmeService.playerReady(client.id, roomName);
+    this.server.emit('currentRoom', this.dupmeService.currentRoom);
+  }
+
+  @SubscribeMessage('playerLeaveRoom')
+  handlePlayerLeaveRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() roomName: string,
+  ) {
+    this.dupmeService.playerLeaveRoom(client.id, roomName);
+    this.server.emit('currentRoom', this.dupmeService.currentRoom);
   }
 }
