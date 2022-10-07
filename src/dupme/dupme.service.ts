@@ -64,6 +64,13 @@ export class DupmeService {
       bet: amount,
       players: player,
       isFull: false,
+      currentRound: 0,
+      rounds: {
+        1: null,
+        2: null,
+        3: null,
+        4: null,
+      },
     };
     this.activePlayer[socketId].currentRoom = roomName;
     this.currentRoom[roomName] = temp;

@@ -5,4 +5,18 @@ export class Room {
   players: User[];
   bet: string;
   isFull: boolean;
+  currentRound: number;
+  rounds: Rounds;
+}
+
+interface Rounds {
+  '1': Round | null;
+  '2': Round | null;
+  '3': Round | null;
+  '4': Round | null;
+}
+
+interface Round {
+  player: string;
+  sequence: string[];
 }

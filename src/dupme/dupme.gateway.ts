@@ -88,6 +88,21 @@ export class DupmeGateway
   ) {
     this.dupmeService.playerReady(client.id, roomName);
     this.server.emit('currentRoom', this.dupmeService.currentRoom);
+    const players = this.dupmeService.currentRoom[roomName].players;
+    if (players[0].isReady && players[1].isReady) {
+      // const round = this.dupmeService.currentRoom.roomName.currentRound
+      // const playerPlaying = round == 1 || round == 4 ? players[0] : players[1]
+      // const time = round % 2 == 1 ? 10 : 20
+      const params = {
+        round: 1,
+        playerPlaying: players[0],
+        time: 10,
+      };
+      // client.to(roomName).emit('gameStart', params);
+      console.log(roomName);
+      console.log(params);
+      this.server.to(roomName).emit('gameStart', params);
+    }
   }
 
   @SubscribeMessage('playerLeaveRoom')
