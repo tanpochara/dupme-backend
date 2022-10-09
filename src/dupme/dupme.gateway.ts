@@ -90,9 +90,6 @@ export class DupmeGateway
     this.server.emit('currentRoom', this.dupmeService.currentRoom);
     const players = this.dupmeService.currentRoom[roomName].players;
     if (players[0].isReady && players[1].isReady) {
-      // const round = this.dupmeService.currentRoom.roomName.currentRound
-      // const playerPlaying = round == 1 || round == 4 ? players[0] : players[1]
-      // const time = round % 2 == 1 ? 10 : 20
       const params = {
         round: 1,
         playerPlaying: players[0],
@@ -112,5 +109,37 @@ export class DupmeGateway
   ) {
     this.dupmeService.playerLeaveRoom(client.id, roomName);
     this.server.emit('currentRoom', this.dupmeService.currentRoom);
+  }
+
+  @SubscribeMessage('roundFinish')
+  handleRoundFinish(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() msg: string,
+  ) {
+    const params = JSON.parse(msg);
+    console.log('round finish', params.round);
+    this.dupmeService.handleRoundFinish(
+      params.round,
+      params.roomName,
+      params.sequence,
+    );
+
+    const players = this.dupmeService.currentRoom[params.roomName].players;
+    const round = this.dupmeService.currentRoom[params.roomName].currentRound;
+    const playerPlaying = round == 1 || round == 4 ? players[0] : players[1];
+    const time = round % 2 == 1 ? 10 : 20;
+
+    const args = {
+      round,
+      playerPlaying,
+      time,
+    };
+
+    console.log(args);
+    if (round > 4) {
+      this.server.to(params.roomName).emit('gameFinish', 'hello world');
+    } else {
+      this.server.to(params.roomName).emit('gameStart', args);
+    }
   }
 }

@@ -92,4 +92,12 @@ export class DupmeService {
   clearRoom(): void {
     this.currentRoom = {};
   }
+
+  handleRoundFinish(round: number, roomName: string, sequence: string[]) {
+    const room = this.currentRoom[roomName];
+
+    room.rounds[round] = sequence;
+    room.currentRound = round + 1;
+    console.log(room);
+  }
 }
