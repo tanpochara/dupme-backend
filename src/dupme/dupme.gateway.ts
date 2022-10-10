@@ -135,8 +135,11 @@ export class DupmeGateway
       time,
     };
 
+    this.server.emit('currentRoom', this.dupmeService.currentRoom);
+
     console.log(args);
     if (round > 4) {
+      this.dupmeService.handleRoomFinish(params.roomName);
       this.server.to(params.roomName).emit('gameFinish', 'hello world');
     } else {
       this.server.to(params.roomName).emit('gameStart', args);
