@@ -3,4 +3,5 @@ export class User {
   isReady: boolean;
   currentRoom: string | null;
   points: number;
+  name: string;
 }

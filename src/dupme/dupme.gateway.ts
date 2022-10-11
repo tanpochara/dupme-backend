@@ -81,6 +81,15 @@ export class DupmeGateway
     this.server.emit('opponentKeyPressed', key);
   }
 
+  @SubscribeMessage('registerName')
+  handleRegisterName(
+    @MessageBody() name: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    this.dupmeService.handleRegisterName(name, client.id);
+    this.server.emit('currentRoom', this.dupmeService.currentRoom);
+  }
+
   @SubscribeMessage('playerReady')
   handlePlayerReady(
     @ConnectedSocket() client: Socket,

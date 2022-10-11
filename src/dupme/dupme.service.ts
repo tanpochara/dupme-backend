@@ -17,6 +17,7 @@ export class DupmeService {
       isReady: false,
       currentRoom: null,
       points: 0,
+      name: '',
     };
     this.activePlayer[socketId] = temp;
   }
@@ -49,6 +50,10 @@ export class DupmeService {
     if (room.players.length == 0) {
       delete this.currentRoom[roomName];
     }
+  }
+
+  handleRegisterName(name: string, socketId: string) {
+    this.activePlayer[socketId].name = name;
   }
 
   clearPlayer(): void {
