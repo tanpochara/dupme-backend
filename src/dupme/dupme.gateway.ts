@@ -41,11 +41,6 @@ export class DupmeGateway
     this.logger.log('player disconnected');
   }
 
-  @SubscribeMessage('playerOnline')
-  handlePlayerOnline() {
-    this.server.emit('currentPlayer', this.dupmeService.activePlayer);
-  }
-
   @SubscribeMessage('getRoom')
   handleRoomOnline() {
     this.server.emit('currentRoom', this.dupmeService.currentRoom);
@@ -87,6 +82,7 @@ export class DupmeGateway
     @ConnectedSocket() client: Socket,
   ) {
     this.dupmeService.handleRegisterName(name, client.id);
+    this.server.emit('currentPlayer', this.dupmeService.activePlayer);
     this.server.emit('currentRoom', this.dupmeService.currentRoom);
   }
 
@@ -120,6 +116,12 @@ export class DupmeGateway
   ) {
     this.dupmeService.playerLeaveRoom(client.id, roomName);
     this.server.emit('currentRoom', this.dupmeService.currentRoom);
+  }
+
+  @SubscribeMessage('getCurrentPlayer')
+  handleGetPlayer() {
+    const players = this.dupmeService.activePlayer;
+    this.server.emit('currentPlayer', players);
   }
 
   @SubscribeMessage('roundFinish')
