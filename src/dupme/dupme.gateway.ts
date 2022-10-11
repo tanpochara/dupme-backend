@@ -98,10 +98,12 @@ export class DupmeGateway
     this.dupmeService.playerReady(client.id, roomName);
     this.server.emit('currentRoom', this.dupmeService.currentRoom);
     const players = this.dupmeService.currentRoom[roomName].players;
+    const randomFirstPlayer = Math.round(Math.random());
     if (players[0].isReady && players[1].isReady) {
+      this.dupmeService.setFirstPlayer(roomName, randomFirstPlayer);
       const params = {
         round: 1,
-        playerPlaying: players[0],
+        playerPlaying: players[randomFirstPlayer],
         time: 10,
       };
       // client.to(roomName).emit('gameStart', params);
@@ -135,7 +137,13 @@ export class DupmeGateway
 
     const players = this.dupmeService.currentRoom[params.roomName].players;
     const round = this.dupmeService.currentRoom[params.roomName].currentRound;
-    const playerPlaying = round == 1 || round == 4 ? players[0] : players[1];
+    const indexOfFirstPlayer =
+      this.dupmeService.currentRoom[params.roomName].firstPlayerIndex;
+    const indexOfSecondPlyaer = indexOfFirstPlayer == 0 ? 1 : 0;
+    const playerPlaying =
+      round == 1 || round == 4
+        ? players[indexOfFirstPlayer]
+        : players[indexOfSecondPlyaer];
     const time = round % 2 == 1 ? 10 : 20;
 
     const args = {
@@ -148,7 +156,6 @@ export class DupmeGateway
 
     console.log(args);
     if (round > 4) {
-      this.dupmeService.handleRoomFinish(params.roomName);
       this.server.to(params.roomName).emit('gameFinish', 'hello world');
     } else {
       this.server.to(params.roomName).emit('gameStart', args);

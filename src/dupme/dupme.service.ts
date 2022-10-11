@@ -77,9 +77,14 @@ export class DupmeService {
         3: null,
         4: null,
       },
+      firstPlayerIndex: 0,
     };
     this.activePlayer[socketId].currentRoom = roomName;
     this.currentRoom[roomName] = temp;
+  }
+
+  setFirstPlayer(roomName: string, firstPlayerIndex: number): void {
+    this.currentRoom[roomName].firstPlayerIndex = firstPlayerIndex;
   }
 
   joinRoom(socketId: string, roomName: string): void {

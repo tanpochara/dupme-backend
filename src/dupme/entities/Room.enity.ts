@@ -7,6 +7,7 @@ export class Room {
   isFull: boolean;
   currentRound: number;
   rounds: Rounds;
+  firstPlayerIndex: number;
 }
 
 interface Rounds {
