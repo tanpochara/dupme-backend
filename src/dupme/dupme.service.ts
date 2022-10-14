@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { Room } from './entities/Room.enity';
 import { User } from './entities/user.enitiy';
+import { User as UserModel, UserDocument } from './schemas/UserSchema';
 
 @Injectable()
 export class DupmeService {
@@ -9,6 +12,21 @@ export class DupmeService {
   //use username room as key
   currentRoom: { [key: string]: Room } = {};
   currentRoomId = 1;
+
+  constructor(
+    @InjectModel(UserModel.name) private userModel: Model<UserDocument>,
+  ) {}
+
+  // const provider = ethers.getDefaultProvider()
+  // const wallet =
+
+  async uploadScore(socketId: string, points: number): Promise<any> {
+    const user = new UserModel();
+    user.points = points;
+    user.socketId = socketId;
+    const createdUser = new this.userModel(user);
+    return await createdUser.save();
+  }
 
   //----------- PLAYER CRUD ---------------
   playerConnect(socketId: string): void {
@@ -116,6 +134,13 @@ export class DupmeService {
     room.rounds[round] = sequence;
     room.currentRound = round + 1;
     console.log(room);
+  }
+
+  handleSurrender(socketId: string, roomName: string) {
+    const room = this.currentRoom[roomName];
+    const winnerPlayerId =
+      room.players[0].id == socketId ? room.players[1].id : room.players[0].id;
+    this.activePlayer[winnerPlayerId].points = 150;
   }
 
   handleRoomFinish(roomName: string) {

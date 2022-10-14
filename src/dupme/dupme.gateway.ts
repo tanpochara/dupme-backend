@@ -124,6 +124,17 @@ export class DupmeGateway
     this.server.emit('currentPlayer', players);
   }
 
+  @SubscribeMessage('playerSurrender')
+  handleSurrender(
+    @ConnectedSocket() cliect: Socket,
+    @MessageBody() roomName: string,
+  ) {
+    console.log('incoming surrender');
+    this.dupmeService.handleSurrender(cliect.id, roomName);
+    this.server.emit('gameFinish', 'hello world');
+    this.server.emit('currentRoom', this.dupmeService.currentRoom);
+  }
+
   @SubscribeMessage('roundFinish')
   handleRoundFinish(
     @ConnectedSocket() client: Socket,
@@ -158,6 +169,7 @@ export class DupmeGateway
 
     console.log(args);
     if (round > 4) {
+      // this.dupmeService.handleWinner(params.roomName);
       this.server.to(params.roomName).emit('gameFinish', 'hello world');
     } else {
       this.server.to(params.roomName).emit('gameStart', args);
