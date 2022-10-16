@@ -8,6 +8,7 @@ export class Room {
   currentRound: number;
   rounds: Rounds;
   firstPlayerIndex: number;
+  mode: 'normal' | 'hard';
 }
 
 interface Rounds {

@@ -80,7 +80,12 @@ export class DupmeService {
 
   //---------------------------------------
 
-  createRoom(socketId: string, amount: string, roomName: string): void {
+  createRoom(
+    socketId: string,
+    amount: string,
+    roomName: string,
+    mode: 'normal' | 'hard',
+  ): void {
     const player = [];
     player.push(this.activePlayer[socketId]);
     const temp: Room = {
@@ -96,6 +101,7 @@ export class DupmeService {
         4: null,
       },
       firstPlayerIndex: 0,
+      mode: mode,
     };
     this.activePlayer[socketId].currentRoom = roomName;
     this.currentRoom[roomName] = temp;

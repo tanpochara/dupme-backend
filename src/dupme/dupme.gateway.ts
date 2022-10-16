@@ -50,7 +50,12 @@ export class DupmeGateway
   handleCreateRoom(@MessageBody() msg, @ConnectedSocket() client: Socket) {
     const roomOption = JSON.parse(msg);
     client.join(roomOption.name);
-    this.dupmeService.createRoom(client.id, roomOption.amount, roomOption.name);
+    this.dupmeService.createRoom(
+      client.id,
+      roomOption.amount,
+      roomOption.name,
+      roomOption.mode,
+    );
     this.server.emit('currentRoom', this.dupmeService.currentRoom);
   }
 
@@ -157,7 +162,11 @@ export class DupmeGateway
       round == 1 || round == 4
         ? players[indexOfFirstPlayer]
         : players[indexOfSecondPlyaer];
-    const time = round % 2 == 1 ? 10 : 20;
+    let time = round % 2 == 1 ? 10 : 20;
+    const mode = this.dupmeService.currentRoom[params.roomName].mode;
+    if (mode == 'hard') {
+      time = 10;
+    }
 
     const args = {
       round,
