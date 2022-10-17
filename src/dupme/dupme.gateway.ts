@@ -91,6 +91,16 @@ export class DupmeGateway
     this.server.emit('currentRoom', this.dupmeService.currentRoom);
   }
 
+  @SubscribeMessage('connectWallet')
+  handlePlayerConnectWallet(
+    @MessageBody() address: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    this.dupmeService.handlePlayerConnectWallet(address, client.id);
+    this.server.emit('currentPlayer', this.dupmeService.activePlayer);
+    this.server.emit('currentRoom', this.dupmeService.currentRoom);
+  }
+
   @SubscribeMessage('playerReady')
   handlePlayerReady(
     @ConnectedSocket() client: Socket,
@@ -135,9 +145,10 @@ export class DupmeGateway
     @MessageBody() roomName: string,
   ) {
     console.log('incoming surrender');
-    this.dupmeService.handleSurrender(cliect.id, roomName);
-    this.server.emit('gameFinish', 'hello world');
-    this.server.emit('currentRoom', this.dupmeService.currentRoom);
+    this.dupmeService.handleSurrender(cliect.id, roomName).then((data) => {
+      this.server.emit('gameFinish', 'hello world');
+      this.server.emit('currentRoom', this.dupmeService.currentRoom);
+    });
   }
 
   @SubscribeMessage('roundFinish')
@@ -178,8 +189,10 @@ export class DupmeGateway
 
     console.log(args);
     if (round > 4) {
-      // this.dupmeService.handleWinner(params.roomName);
-      this.server.to(params.roomName).emit('gameFinish', 'hello world');
+      this.dupmeService.announceWinner(params.roomName).then((data) => {
+        console.log(data);
+        this.server.to(params.roomName).emit('gameFinish', 'hello world');
+      });
     } else {
       this.server.to(params.roomName).emit('gameStart', args);
     }

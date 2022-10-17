@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { ethers } from 'ethers';
 import { Model } from 'mongoose';
 import { Room } from './entities/Room.enity';
 import { User } from './entities/user.enitiy';
 import { User as UserModel, UserDocument } from './schemas/UserSchema';
+import { stakerABI } from './abi/StakerABI';
 
 @Injectable()
 export class DupmeService {
@@ -12,21 +14,40 @@ export class DupmeService {
   //use username room as key
   currentRoom: { [key: string]: Room } = {};
   currentRoomId = 1;
+  contract: ethers.Contract;
 
   constructor(
     @InjectModel(UserModel.name) private userModel: Model<UserDocument>,
-  ) {}
-
-  // const provider = ethers.getDefaultProvider()
-  // const wallet =
-
-  async uploadScore(socketId: string, points: number): Promise<any> {
-    const user = new UserModel();
-    user.points = points;
-    user.socketId = socketId;
-    const createdUser = new this.userModel(user);
-    return await createdUser.save();
+  ) {
+    const provider = new ethers.providers.JsonRpcProvider(
+      process.env.RPC_PROVIDER,
+    );
+    const wallet = new ethers.Wallet(process.env.WALLET_PRIVATE_KEY, provider);
+    console.log(stakerABI);
+    this.contract = new ethers.Contract(
+      process.env.STAKER_CONTRACT_ADDRESS,
+      stakerABI,
+      wallet,
+    );
   }
+
+  async announceWinner(roomName: string): Promise<any> {
+    const room = this.currentRoom[roomName];
+    const winnerAddress: string =
+      room.players[0].points > room.players[1].points
+        ? room.players[0].address
+        : room.players[1].address;
+    const tx = await this.contract.winner(roomName, winnerAddress);
+    await tx.wait();
+  }
+
+  // async uploadScore(socketId: string, points: number): Promise<any> {
+  //   const user = new UserModel();
+  //   user.points = points;
+  //   user.socketId = socketId;
+  //   const createdUser = new this.userModel(user);
+  //   return await createdUser.save();
+  // }
 
   //----------- PLAYER CRUD ---------------
   playerConnect(socketId: string): void {
@@ -36,6 +57,7 @@ export class DupmeService {
       currentRoom: null,
       points: 0,
       name: '',
+      address: '',
     };
     this.activePlayer[socketId] = temp;
   }
@@ -72,6 +94,10 @@ export class DupmeService {
 
   handleRegisterName(name: string, socketId: string) {
     this.activePlayer[socketId].name = name;
+  }
+
+  handlePlayerConnectWallet(address: string, socketId: string) {
+    this.activePlayer[socketId].address = address;
   }
 
   clearPlayer(): void {
@@ -142,11 +168,12 @@ export class DupmeService {
     console.log(room);
   }
 
-  handleSurrender(socketId: string, roomName: string) {
+  async handleSurrender(socketId: string, roomName: string) {
     const room = this.currentRoom[roomName];
     const winnerPlayerId =
       room.players[0].id == socketId ? room.players[1].id : room.players[0].id;
     this.activePlayer[winnerPlayerId].points = 150;
+    await this.announceWinner(roomName);
   }
 
   handleRoomFinish(roomName: string) {

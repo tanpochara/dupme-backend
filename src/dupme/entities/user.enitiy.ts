@@ -4,4 +4,5 @@ export class User {
   currentRoom: string | null;
   points: number;
   name: string;
+  address: string;
 }
