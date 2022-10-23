@@ -191,10 +191,18 @@ export class DupmeGateway
     if (round > 4) {
       this.dupmeService.announceWinner(params.roomName).then((data) => {
         console.log(data);
+        this.dupmeService.uploadScore(params.roomName);
         this.server.to(params.roomName).emit('gameFinish', 'hello world');
       });
     } else {
       this.server.to(params.roomName).emit('gameStart', args);
     }
+  }
+
+  @SubscribeMessage('getScore')
+  async handleGetScore() {
+    this.dupmeService.getScore().then((score) => {
+      this.server.emit('leaderboardScore', score);
+    });
   }
 }

@@ -41,13 +41,30 @@ export class DupmeService {
     await tx.wait();
   }
 
-  // async uploadScore(socketId: string, points: number): Promise<any> {
-  //   const user = new UserModel();
-  //   user.points = points;
-  //   user.socketId = socketId;
-  //   const createdUser = new this.userModel(user);
-  //   return await createdUser.save();
-  // }
+  async uploadScore(roomName: string): Promise<any> {
+    const room = this.currentRoom[roomName];
+    for (let i = 0; i < room.players.length; i++) {
+      const player = await this.userModel.findOne({
+        name: room.players[i].name,
+      });
+      if (!player) {
+        const newPlayer = new this.userModel();
+        newPlayer.name = room.players[i].name;
+        newPlayer.points = room.players[i].points;
+        newPlayer.socketId = room.players[i].id;
+        await newPlayer.save();
+      } else {
+        const currentScore = player.points;
+        player.points = room.players[i].points + currentScore;
+        await player.save();
+      }
+    }
+  }
+
+  async getScore(): Promise<any> {
+    const scores = await this.userModel.find({}).sort({ points: 'desc' });
+    return scores;
+  }
 
   //----------- PLAYER CRUD ---------------
   playerConnect(socketId: string): void {

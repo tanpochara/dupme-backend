@@ -10,6 +10,9 @@ export class User {
 
   @Prop()
   points: number;
+
+  @Prop()
+  name: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
