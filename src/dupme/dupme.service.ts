@@ -92,7 +92,7 @@ export class DupmeService {
     delete this.activePlayer[socketId];
   }
 
-  playerReady(socketId: string, roomName: string): void {
+  playerReady(socketId: string): void {
     const player = this.activePlayer[socketId];
     player.isReady = true;
   }
@@ -101,6 +101,7 @@ export class DupmeService {
     const player = this.activePlayer[socketId];
     player.isReady = false;
     player.currentRoom = null;
+    player.points = 0;
 
     const room = this.currentRoom[roomName];
     room.players = room.players.filter((playerr) => playerr.id != player.id);
@@ -173,10 +174,15 @@ export class DupmeService {
 
   handleRoundFinish(round: number, roomName: string, sequence: string[]) {
     const room = this.currentRoom[roomName];
+    const firstPlayerIndex = room.firstPlayerIndex;
+    const secondPlayerIndex = firstPlayerIndex == 0 ? 1 : 0;
 
     if (round % 2 == 0) {
       const point = this.updateScore(room.rounds[round - 1], sequence);
-      const playerCopying = round == 2 ? room.players[1] : room.players[0];
+      const playerCopying =
+        round == 2
+          ? room.players[secondPlayerIndex]
+          : room.players[firstPlayerIndex];
       this.activePlayer[playerCopying.id].points = point;
     }
 

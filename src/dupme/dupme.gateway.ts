@@ -106,10 +106,11 @@ export class DupmeGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() roomName: string,
   ) {
-    this.dupmeService.playerReady(client.id, roomName);
+    this.dupmeService.playerReady(client.id);
     this.server.emit('currentRoom', this.dupmeService.currentRoom);
     const players = this.dupmeService.currentRoom[roomName].players;
     const randomFirstPlayer = Math.round(Math.random());
+    this.logger.verbose(randomFirstPlayer);
     if (players[0].isReady && players[1].isReady) {
       this.dupmeService.setFirstPlayer(roomName, randomFirstPlayer);
       const params = {
@@ -146,6 +147,7 @@ export class DupmeGateway
   ) {
     console.log('incoming surrender');
     this.dupmeService.handleSurrender(cliect.id, roomName).then((data) => {
+      console.log(data);
       this.server.emit('gameFinish', 'hello world');
       this.server.emit('currentRoom', this.dupmeService.currentRoom);
     });
