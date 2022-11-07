@@ -8,9 +8,7 @@ import { DupmeModule } from './dupme/dupme.module';
 @Module({
   imports: [
     DupmeModule,
-    MongooseModule.forRoot(
-      'mongodb+srv://root:dupme@cluster0.tjk8y.mongodb.net/?retryWrites=true&w=majority',
-    ),
+    MongooseModule.forRoot(process.env.MONGO_CONNECTION_STRING),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
